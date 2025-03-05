@@ -7,6 +7,7 @@ import (
 	"os"
 	"sync/atomic"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/rhafaelc/chirpy/internal/database"
 )
@@ -17,9 +18,14 @@ type apiConfig struct {
 }
 
 func main() {
-	dbURL := os.Getenv("DB_URL")
 	const filepathRoot = "."
 	const port = "8080"
+
+	godotenv.Load()
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL must be set")
+	}
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
