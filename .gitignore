@@ -1,3 +1,5 @@
 .devbox/
 go/
 out
+logfile
+.env

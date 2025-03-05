@@ -1,20 +1,35 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
+	"os"
 	"sync/atomic"
+
+	_ "github.com/lib/pq"
+	"github.com/rhafaelc/chirpy/internal/database"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
+	db             *database.Queries
 }
 
 func main() {
+	dbURL := os.Getenv("DB_URL")
 	const filepathRoot = "."
 	const port = "8080"
+
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatalf("error opening db: %s", err)
+	}
+	dbQueries := database.New(db)
+
 	apiCfg := &apiConfig{
 		fileserverHits: atomic.Int32{},
+		db:             dbQueries,
 	}
 
 	mux := http.NewServeMux()
@@ -27,7 +42,6 @@ func main() {
 
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
-
 
 	srv := &http.Server{
 		Addr:    ":" + port,
