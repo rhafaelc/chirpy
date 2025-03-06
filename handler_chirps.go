@@ -18,6 +18,28 @@ type Chirp struct {
 	UserId    uuid.UUID `json:"user_id"`
 }
 
+func (cfg *apiConfig) handlerChirpGetById(w http.ResponseWriter, r *http.Request) {
+	chirpID := r.PathValue("chirpID")
+	chirpUUID, err := uuid.Parse(chirpID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Id is not UUID", err)
+		return
+	}
+
+	dbChirp, err := cfg.db.GetChirpById(r.Context(), chirpUUID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't get chirp by id", err)
+		return
+	}
+	respondWithJSON(w, http.StatusOK, Chirp{
+		Id:        dbChirp.ID,
+		CreatedAt: dbChirp.CreatedAt,
+		UpdatedAt: dbChirp.UpdatedAt,
+		Body:      dbChirp.Body,
+		UserId:    dbChirp.UserID,
+	})
+}
+
 func (cfg *apiConfig) handlerChirpsList(w http.ResponseWriter, r *http.Request) {
 	chirps, err := cfg.db.ListChirps(r.Context())
 	if err != nil {
