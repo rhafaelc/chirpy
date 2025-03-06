@@ -22,6 +22,7 @@ func (cfg *apiConfig) handlerChirpsList(w http.ResponseWriter, r *http.Request) 
 	chirps, err := cfg.db.ListChirps(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't list chirps", err)
+		return
 	}
 
 	result := []Chirp{}
