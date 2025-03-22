@@ -2,6 +2,8 @@ package auth
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -14,6 +16,24 @@ type TokenType string
 const (
 	TokenTypeAccess TokenType = "chirpy-access"
 )
+
+func GetBearerToken(headers http.Header) (string, error) {
+	authorizationValue := headers.Get("Authorization")
+	if authorizationValue == "" {
+		return "", fmt.Errorf("authorization header is missing")
+	}
+
+	parts := strings.Split(authorizationValue, "Bearer ")
+	if len(parts) != 2 {
+		return "", fmt.Errorf("invalid authorization header format: expected 'Bearer <token>'")
+	}
+
+	token := strings.TrimSpace(parts[1])
+	if token == "" {
+		return "", fmt.Errorf("bearer token is empty")
+	}
+	return token, nil
+}
 
 func HashPassword(password string) (string, error) {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), 10)

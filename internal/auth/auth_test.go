@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -56,7 +56,6 @@ func TestMakeAndValidateJWT(t *testing.T) {
 			}
 
 			extractedId, err := ValidateJWT(token, tt.validateSecret)
-			fmt.Printf("LOLOLOL%vLOLOLOLOLOL", extractedId)
 			if tt.wantErr && err == nil {
 				t.Errorf("Expected error but got none")
 				return
@@ -69,6 +68,84 @@ func TestMakeAndValidateJWT(t *testing.T) {
 			if !tt.wantErr && err == nil && tt.userID != extractedId {
 				t.Errorf("User ID doesn't match: %v != %v", tt.userID, extractedId)
 				return
+			}
+		})
+	}
+}
+
+func TestGetBearerToken(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		headers http.Header
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "Get Bearer Token Success",
+			headers: func() http.Header {
+				h := http.Header{}
+				h.Set("Authorization", "Bearer Lol")
+				return h
+			}(),
+			want:    "Lol",
+			wantErr: false,
+		},
+
+		{
+			name: "Get Bearer Token Success Trimmed",
+			headers: func() http.Header {
+				h := http.Header{}
+				h.Set("Authorization", "Bearer Lol   ")
+				return h
+			}(),
+			want:    "Lol",
+			wantErr: false,
+		},
+		{
+			name: "Get Bearer Token No Authorization header",
+			headers: func() http.Header {
+				h := http.Header{}
+				return h
+			}(),
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "Get Bearer Token Can't be Parsed 1",
+			headers: func() http.Header {
+				h := http.Header{}
+				h.Set("Authorization", "wut is this")
+				return h
+			}(),
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "Get Bearer Token Can't be Parsed 2",
+			headers: func() http.Header {
+				h := http.Header{}
+				h.Set("Authorization", "Bearer Lol Bearer Lol")
+				return h
+			}(),
+			want:    "",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotErr := GetBearerToken(tt.headers)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetBearerToken() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetBearerToken() succeeded unexpectedly")
+			}
+			if got != tt.want {
+				t.Errorf("GetBearerToken() = %v, want %v", got, tt.want)
 			}
 		})
 	}
