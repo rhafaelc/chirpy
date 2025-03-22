@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -21,7 +20,7 @@ type User struct {
 func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Password string `json:"password"`
-		Email    string `json:"email,omitempty"`
+		Email    string `json:"email"`
 	}
 
 	type returnVals struct {
@@ -42,7 +41,7 @@ func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = auth.CheckPasswordHash(params.Password, user.HashedPassword.String)
+	err = auth.CheckPasswordHash(params.Password, user.HashedPassword)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Incorrect email or password", err)
 		return
@@ -62,7 +61,7 @@ func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Password string `json:"password"`
-		Email    string `json:"email,omitempty"`
+		Email    string `json:"email"`
 	}
 
 	type returnVals struct {
@@ -84,11 +83,8 @@ func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) 
 	}
 
 	user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
-		Email: params.Email,
-		HashedPassword: sql.NullString{
-			String: hashedPassword,
-			Valid:  true,
-		},
+		Email:          params.Email,
+		HashedPassword: hashedPassword,
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create a user", err)
