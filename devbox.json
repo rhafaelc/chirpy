@@ -10,8 +10,8 @@
     }
   },
   "env": {
-    "GOPATH": "$PWD/go",
-    "PATH":   "$PATH:$PWD/go/bin"
+    "GOPATH": "$PWD/../go",
+    "PATH":   "$PATH:$PWD/../go/bin"
   },
   "shell": {
     "init_hook": ["echo 'Welcome to devbox!' > /dev/null"],
