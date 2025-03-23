@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strings"
@@ -16,6 +18,14 @@ type TokenType string
 const (
 	TokenTypeAccess TokenType = "chirpy-access"
 )
+
+func MakeRefreshToken() (string, error) {
+	token := make([]byte, 32)
+	rand.Read(token)
+
+	tokenString := hex.EncodeToString(token)
+	return tokenString, nil
+}
 
 func GetBearerToken(headers http.Header) (string, error) {
 	authorizationValue := headers.Get("Authorization")
