@@ -66,7 +66,7 @@ func (cfg *apiConfig) handlerChirpsList(w http.ResponseWriter, r *http.Request) 
 
 func (cfg *apiConfig) handlerChirpCreate(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Body   string    `json:"body"`
+		Body string `json:"body"`
 	}
 
 	type returnVals struct {
@@ -75,12 +75,14 @@ func (cfg *apiConfig) handlerChirpCreate(w http.ResponseWriter, r *http.Request)
 
 	bearerToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Couldn't get bearer token", err)
+		respondWithError(w, http.StatusUnauthorized, "Token malformed or missing", err)
+		return
 	}
 
 	userId, err := auth.ValidateJWT(bearerToken, cfg.jwtSecret)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Unauthorized", err)
+		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -109,6 +111,7 @@ func (cfg *apiConfig) handlerChirpCreate(w http.ResponseWriter, r *http.Request)
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create chirp", err)
+		return
 	}
 
 	respondWithJSON(w, http.StatusCreated, returnVals{
