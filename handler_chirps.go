@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -29,6 +30,10 @@ func (cfg *apiConfig) handlerChirpGetById(w http.ResponseWriter, r *http.Request
 
 	dbChirp, err := cfg.db.GetChirpById(r.Context(), chirpUUID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			respondWithError(w, http.StatusNotFound, "Couldn't get chirp", err)
+			return
+		}
 		respondWithError(w, http.StatusInternalServerError, "Couldn't get chirp by id", err)
 		return
 	}
