@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -98,6 +99,12 @@ func (cfg *apiConfig) handlerChirpGetById(w http.ResponseWriter, r *http.Request
 
 func (cfg *apiConfig) handlerChirpsList(w http.ResponseWriter, r *http.Request) {
 	authorId := r.URL.Query().Get("author_id")
+	sortValue := r.URL.Query().Get("sort")
+	if sortValue != "asc" && sortValue != "desc" && sortValue != "" {
+		respondWithError(w, http.StatusBadRequest, "'sort' must be 'asc', 'desc', or empty", nil)
+		return
+	}
+
 	var chirps []database.Chirp
 	var err error
 
@@ -132,6 +139,16 @@ func (cfg *apiConfig) handlerChirpsList(w http.ResponseWriter, r *http.Request) 
 			UserId:    chirp.UserID,
 		}
 		result = append(result, c)
+	}
+
+	if sortValue == "desc" {
+		sort.Slice(
+			result,
+			func(i, j int) bool {
+				return result[i].CreatedAt.After(result[j].CreatedAt)
+			},
+		)
+	} else if sortValue == "" || sortValue == "asc" {
 	}
 
 	respondWithJSON(w, http.StatusOK, result)
