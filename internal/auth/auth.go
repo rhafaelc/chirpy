@@ -45,6 +45,24 @@ func GetBearerToken(headers http.Header) (string, error) {
 	return token, nil
 }
 
+func GetApiKey(headers http.Header) (string, error) {
+	authorizationValue := headers.Get("Authorization")
+	if authorizationValue == "" {
+		return "", fmt.Errorf("authorization header is missing")
+	}
+
+	parts := strings.Split(authorizationValue, "ApiKey ")
+	if len(parts) != 2 {
+		return "", fmt.Errorf("invalid authorization header format: expected 'ApiKey <token>'")
+	}
+
+	apiKey := strings.TrimSpace(parts[1])
+	if apiKey == "" {
+		return "", fmt.Errorf("bearer token is empty")
+	}
+	return apiKey, nil
+}
+
 func HashPassword(password string) (string, error) {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
